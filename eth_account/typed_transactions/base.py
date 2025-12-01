@@ -16,6 +16,7 @@ from typing import (
 from ckzg import (
     blob_to_kzg_commitment,
     compute_blob_kzg_proof,
+    compute_cells_and_kzg_proofs,
     load_trusted_setup,
 )
 from eth_typing import (
@@ -138,7 +139,7 @@ class BlobKZGCommitment(_BlobDataElement):
     @field_validator("data")
     def validate_commitment(cls, v: Union[HexBytes, bytes]) -> Union[HexBytes, bytes]:
         if len(v) != 48:
-            raise ValidationError("Blob KZG Commitment must be 48 bytes long.")
+            raise ValidationError("Blob kzg commitment must be 48 bytes long.")
         return v
 
 
@@ -150,7 +151,19 @@ class BlobProof(_BlobDataElement):
     @field_validator("data")
     def validate_proof(cls, v: Union[HexBytes, bytes]) -> Union[HexBytes, bytes]:
         if len(v) != 48:
-            raise ValidationError("Blob Proof must be 48 bytes long.")
+            raise ValidationError("Blob proof must be 48 bytes long.")
+        return v
+
+
+class BlobCellProof(_BlobDataElement):
+    """
+    Represents a Blob Cell Proof.
+    """
+
+    @field_validator("data")
+    def validate_proof(cls, v: Union[HexBytes, bytes]) -> Union[HexBytes, bytes]:
+        if len(v) != 48:
+            raise ValidationError("Blob cell proof must be 48 bytes long.")
         return v
 
 
@@ -164,10 +177,10 @@ class BlobVersionedHash(_BlobDataElement):
         cls, v: Union[HexBytes, bytes]
     ) -> Union[HexBytes, bytes]:
         if len(v) != 32:
-            raise ValidationError("Blob Versioned Hash must be 32 bytes long.")
+            raise ValidationError("Blob versioned hash must be 32 bytes long.")
         if v[:1] != VERSIONED_HASH_VERSION_KZG:
             raise ValidationError(
-                "Blob Versioned Hash must start with the KZG version byte."
+                "Blob versioned hash must start with the kzg version byte."
             )
         return v
 
@@ -183,6 +196,7 @@ class BlobPooledTransactionData(BaseModel):
     _versioned_hashes: Optional[List[BlobVersionedHash]] = None
     _commitments: Optional[List[BlobKZGCommitment]] = None
     _proofs: Optional[List[BlobProof]] = None
+    _cell_proofs: Optional[List[BlobCellProof]] = None
 
     blobs: List[Blob]
 
@@ -251,6 +265,23 @@ class BlobPooledTransactionData(BaseModel):
                 for blob, commitment in zip(self.blobs, self.commitments)
             ]
         return self._proofs
+
+    # type ignored bc mypy does not support decorated properties
+    # https://github.com/python/mypy/issues/1362
+    @computed_field  # type: ignore
+    @property
+    def cell_proofs(self) -> List[BlobCellProof]:
+        if self._cell_proofs is None:
+            self._cell_proofs = []
+            for blob in self.blobs:
+                cells, cell_proofs = compute_cells_and_kzg_proofs(
+                    blob.data, load_trusted_setup(TRUSTED_SETUP, 0)
+                )
+                self._cell_proofs.extend(
+                    BlobCellProof(data=HexBytes(cell_proof))
+                    for cell_proof in cell_proofs
+                )
+        return self._cell_proofs
 
 
 class _TypedTransactionImplementation(ABC):

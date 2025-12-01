@@ -65,6 +65,7 @@ class BlobTransaction(_TypedTransactionImplementation):
     """
 
     transaction_type = 3  # '0x03'
+    wrapper_version = 1  # '0x01'
     blob_data: Optional[BlobPooledTransactionData] = None
 
     unsigned_transaction_fields = (
@@ -121,6 +122,7 @@ class BlobTransaction(_TypedTransactionImplementation):
         {
             "fields": (
                 ("tx_payload_body", _signed_transaction_serializer),
+                ("wrapper_version", big_endian_int),
                 (
                     "blobs",
                     CountableList(binary.fixed_length(4096 * 32)),
@@ -129,7 +131,7 @@ class BlobTransaction(_TypedTransactionImplementation):
                     "commitments",
                     CountableList(binary.fixed_length(48)),
                 ),
-                ("proofs", CountableList(binary.fixed_length(48))),
+                ("cell_proofs", CountableList(binary.fixed_length(48))),
             ),
         },
     )
@@ -350,8 +352,8 @@ class BlobTransaction(_TypedTransactionImplementation):
             rlp_serializer = self.__class__._signed_transaction_serializer
             payload = rlp.encode(rlp_serializer.from_dict(rlp_structured_dict))  # type: ignore # noqa: E501
         else:
-            # `PooledTransaction` as defined in EIP-4844
-            # rlp([tx_payload_body, blobs, commitments, proofs])
+            # `PooledTransaction` as defined in EIP-7994
+            # rlp([tx_payload_body, blobs, commitments, cell_proofs])
             rlp_serializer = self.__class__._signed_pooled_transaction_serializer
             pooled_txn_as_dict = {
                 "tx_payload_body": tuple(
@@ -360,11 +362,14 @@ class BlobTransaction(_TypedTransactionImplementation):
                         self.unsigned_transaction_fields + self.signature_fields
                     )
                 ),
+                "wrapper_version": self.wrapper_version,
                 "blobs": [blob.as_bytes() for blob in self.blob_data.blobs],
                 "commitments": [
                     commitment.as_bytes() for commitment in self.blob_data.commitments
                 ],
-                "proofs": [proof.as_bytes() for proof in self.blob_data.proofs],
+                "cell_proofs": [
+                    cell_proof.as_bytes() for cell_proof in self.blob_data.cell_proofs
+                ],
             }
             payload = rlp.encode(rlp_serializer.from_dict(pooled_txn_as_dict))  # type: ignore # noqa: E501
 
