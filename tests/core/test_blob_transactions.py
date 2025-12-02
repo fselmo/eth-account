@@ -117,7 +117,6 @@ def test_blobs_commitments_proofs_and_hashes_from_blobs():
 
 
 def test_sign_blob_transaction_matches_expected_bytes():
-    """Test that signed blob transaction matches pre-computed EIP-7594 format bytes."""
     with open(ZERO_BLOB_EIP7594_SIGNED_PATH) as f:
         expected_tx_bytes = to_bytes(hexstr=f.read().strip("\n"))
 
@@ -126,25 +125,20 @@ def test_sign_blob_transaction_matches_expected_bytes():
 
 
 def test_blob_transaction_calculation_with_nonzero_blob():
-    """Test blob transaction with non-zero blob data."""
     with open(BLOB_DATA_1_PATH) as blob_data_1_file:
         blob_data_1 = to_bytes(hexstr=blob_data_1_file.read().strip("\n"))
 
     tx = BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[blob_data_1])
     assert len(tx.blob_data.blobs) == len(tx.blob_data.versioned_hashes) == 1
-    assert (
-        len(tx.blob_data.cell_proofs) == 128
-    )  # EIP-7594: 128 cell proofs per blob
+    assert len(tx.blob_data.cell_proofs) == 128
 
     assert tx.blob_data.blobs[0].as_bytes() == blob_data_1
-    # Versioned hash and commitment are unchanged from EIP-4844
     assert tx.blob_data.versioned_hashes[0].as_hexstr() == (
         "0x018ef96865998238a5e1783b6cafbc1253235d636f15d318f1fb50ef6a5b8f6a"
     )
     assert tx.blob_data.commitments[0].as_hexstr() == (
         "0xb44bafc7381d7ba2072cfbb7091c1fa1fdabcf3999270a551fe54a6741ddebc1bdfbeeabe1b74f5c3935aeedf6b2db84"  # noqa: E501
     )
-    # EIP-4844 blob proof (single proof per blob, still computed for compatibility)
     assert tx.blob_data.proofs[0].as_hexstr() == (
         "0x963150f3ee4d5e5f065429f587b4fa199cd8a866b8f6388eb52372870052603c98194c6521077c3260c41bf3b796c833"  # noqa: E501
     )
@@ -178,15 +172,6 @@ def test_high_and_low_blob_count_limit_validation():
 
 
 def test_deserialize_legacy_eip4844_transaction():
-    """
-    Test that old EIP-4844 format transactions can still be deserialized.
-
-    Legacy format: [tx_payload_body, blobs, commitments, proofs]
-    New EIP-7594 format: [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
-
-    When deserializing legacy format, cell_proofs are recomputed from blobs.
-    """
-    # This file contains an EIP-4844 format transaction (pre-EIP-7594)
     with open(SIGNED_TX_PATH) as signed_tx_file:
         legacy_tx_bytes = HexBytes(
             to_bytes(hexstr=signed_tx_file.read().strip("\n"))
@@ -211,11 +196,6 @@ def test_deserialize_legacy_eip4844_transaction():
 
 
 def test_deserialize_legacy_eip4844_transaction_with_nonzero_blob():
-    """
-    Test deserializing a legacy EIP-4844 transaction with non-zero blob data.
-
-    This tests backward compatibility with real blob data, not just zero blobs.
-    """
     with open(BLOB_DATA_1_PATH) as blob_data_file:
         expected_blob = to_bytes(hexstr=blob_data_file.read().strip("\n"))
 
@@ -230,10 +210,8 @@ def test_deserialize_legacy_eip4844_transaction_with_nonzero_blob():
     assert len(tx.blob_data.blobs) == 1
     assert tx.blob_data.blobs[0].as_bytes() == expected_blob
 
-    # EIP-7594: 128 cell proofs per blob (recomputed from blob data)
     assert len(tx.blob_data.cell_proofs) == 128
 
-    # Versioned hash and commitment match expected values for blob_data_1
     assert tx.blob_data.versioned_hashes[0].as_hexstr() == (
         "0x018ef96865998238a5e1783b6cafbc1253235d636f15d318f1fb50ef6a5b8f6a"
     )
@@ -270,25 +248,17 @@ def test_cell_proofs_match_consensus_spec_vectors(test_name, test_file):
     blob_hex = test_data["input"]["blob"]
     blob_bytes = to_bytes(hexstr=blob_hex)
 
-    # Expected outputs from consensus-spec-tests
     expected_cells = test_data["output"][0]
     expected_proofs = test_data["output"][1]
 
-    # Create a transaction with the blob to compute cell proofs
     tx = BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[blob_bytes])
 
-    # Verify we get 128 cell proofs per blob
-    assert (
-        len(tx.blob_data.cell_proofs) == 128
-    ), f"Expected 128 cell proofs, got {len(tx.blob_data.cell_proofs)}"
+    assert len(tx.blob_data.cell_proofs) == 128
 
-    # Verify each cell proof matches the expected value
     for i, (computed_proof, expected_proof) in enumerate(
         zip(tx.blob_data.cell_proofs, expected_proofs)
     ):
-        assert (
-            computed_proof.as_hexstr() == expected_proof.lower()
-        ), f"Cell proof {i} mismatch in {test_name}"
+        assert computed_proof.as_hexstr() == expected_proof.lower()
 
 
 def test_cell_proofs_count_with_multiple_blobs():
@@ -305,35 +275,28 @@ def test_blob_transaction_roundtrip_with_cell_proofs():
     blob = to_bytes(hexstr=ZERO_BLOB)
     tx = BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[blob])
 
-    # Sign the transaction
     signed_tx = TEST_ACCT.sign_transaction(tx.dictionary, blobs=[blob])
 
-    # Deserialize from bytes
     tx_from_bytes = BlobTransaction.from_bytes(signed_tx.raw_transaction)
 
-    # Verify blob data is preserved
     assert tx_from_bytes.blob_data is not None
     assert len(tx_from_bytes.blob_data.blobs) == 1
     assert len(tx_from_bytes.blob_data.versioned_hashes) == 1
     assert len(tx_from_bytes.blob_data.cell_proofs) == 128
 
-    # Verify the blob content matches
     assert tx_from_bytes.blob_data.blobs[0].as_hexstr() == ZERO_BLOB
 
-    # Verify versioned hash matches expected and dictionary value
     assert (
         tx_from_bytes.blob_data.versioned_hashes[0].as_hexbytes()
         == tx_from_bytes.dictionary["blobVersionedHashes"][0]
         == HexBytes(ZERO_BLOB_VERSIONED_HASH)
     )
 
-    # Verify commitment matches
     assert (
         tx_from_bytes.blob_data.commitments[0].as_hexstr()
         == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
     )
 
-    # Verify cell proofs match between original and deserialized
     for i, (original, deserialized) in enumerate(
         zip(tx.blob_data.cell_proofs, tx_from_bytes.blob_data.cell_proofs)
     ):
@@ -341,13 +304,6 @@ def test_blob_transaction_roundtrip_with_cell_proofs():
 
 
 def _get_go_eth_kzg_test_cases():
-    """
-    Load test cases combining consensus-spec-tests blobs with go-eth-kzg signed transactions.
-
-    Blobs are sourced from consensus-spec-tests YAML files (authoritative source).
-    Signed transaction bytes are from go-eth-kzg JSON (cross-implementation validation).
-    """
-    # Load go-eth-kzg signed transactions indexed by test name
     with open(GO_ETH_KZG_COMPUTED_PATH) as f:
         go_eth_kzg_data = {item["test_name"]: item for item in json.load(f)}
 
@@ -356,7 +312,6 @@ def _get_go_eth_kzg_test_cases():
     for test_file in glob.glob(pattern):
         test_name = os.path.basename(os.path.dirname(test_file))
         if test_name in go_eth_kzg_data:
-            # Read blob from consensus-spec-tests YAML
             with open(test_file) as f:
                 yaml_data = yaml.safe_load(f)
             test_cases.append(
@@ -377,30 +332,7 @@ def _get_go_eth_kzg_test_cases():
 def test_signed_tx_bytes_match_go_eth_kzg(
     test_name, blob_hex, expected_tx_hex
 ):
-    """
-    Test that signed EIP-7594 transaction bytes match go-eth-kzg output exactly.
-
-    This provides byte-for-byte verification between:
-    - Python: eth-account using ckzg library
-    - Go: go-eth-kzg library (crate-crypto/go-eth-kzg) with manual RLP encoding
-
-    Blobs are sourced from consensus-spec-tests (authoritative).
-    Expected transaction bytes are from go-eth-kzg (cross-implementation validation).
-
-    Both implementations produce identical EIP-7594 format transactions:
-    0x03 || rlp([tx_payload_body, wrapper_version, blobs, commitments, cell_proofs])
-    """
     blob_bytes = to_bytes(hexstr=blob_hex)
-
-    # Sign with eth-account (Python/ckzg)
     signed_tx = TEST_ACCT.sign_transaction(BLOB_TX_DICT, blobs=[blob_bytes])
-
-    # Get go-eth-kzg signed transaction (EIP-7594 format)
     go_tx_bytes = to_bytes(hexstr=expected_tx_hex)
-
-    # Compare raw transaction bytes
-    assert signed_tx.raw_transaction == HexBytes(go_tx_bytes), (
-        f"Raw transaction bytes mismatch in {test_name}:\n"
-        f"  Python len: {len(signed_tx.raw_transaction)}\n"
-        f"  Go len: {len(go_tx_bytes)}"
-    )
+    assert signed_tx.raw_transaction == HexBytes(go_tx_bytes)
