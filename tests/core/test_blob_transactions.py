@@ -3,7 +3,6 @@ import json
 import os
 
 import pytest
-import yaml
 from eth_utils import (
     ValidationError,
     to_bytes,
@@ -223,7 +222,7 @@ def test_deserialize_legacy_eip4844_transaction_with_nonzero_blob():
 def _get_consensus_spec_test_cases():
     """Load valid test cases from consensus-spec-tests."""
     test_cases = []
-    pattern = os.path.join(CONSENSUS_SPEC_TESTS_PATH, "*_valid_*", "data.yaml")
+    pattern = os.path.join(CONSENSUS_SPEC_TESTS_PATH, "*_valid_*", "data.json")
     for test_file in glob.glob(pattern):
         test_name = os.path.basename(os.path.dirname(test_file))
         test_cases.append((test_name, test_file))
@@ -243,7 +242,7 @@ def test_cell_proofs_match_consensus_spec_vectors(test_name, test_file):
     Release: v1.6.0-beta.0
     """
     with open(test_file) as f:
-        test_data = yaml.safe_load(f)
+        test_data = json.load(f)
 
     blob_hex = test_data["input"]["blob"]
     blob_bytes = to_bytes(hexstr=blob_hex)
@@ -308,16 +307,16 @@ def _get_go_eth_kzg_test_cases():
         go_eth_kzg_data = {item["test_name"]: item for item in json.load(f)}
 
     test_cases = []
-    pattern = os.path.join(CONSENSUS_SPEC_TESTS_PATH, "*_valid_*", "data.yaml")
+    pattern = os.path.join(CONSENSUS_SPEC_TESTS_PATH, "*_valid_*", "data.json")
     for test_file in glob.glob(pattern):
         test_name = os.path.basename(os.path.dirname(test_file))
         if test_name in go_eth_kzg_data:
             with open(test_file) as f:
-                yaml_data = yaml.safe_load(f)
+                json_data = json.load(f)
             test_cases.append(
                 (
                     test_name,
-                    yaml_data["input"]["blob"],
+                    json_data["input"]["blob"],
                     go_eth_kzg_data[test_name]["signed_transaction_hex"],
                 )
             )
