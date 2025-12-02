@@ -116,7 +116,8 @@ class BlobTransaction(_TypedTransactionImplementation):
         },
     )
 
-    # EIP-7594 format: [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
+    # EIP-7594 format:
+    # [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
     _signed_pooled_transaction_serializer = type(
         "_signed_pooled_transaction_serializer",
         (HashableRLP,),
@@ -191,9 +192,9 @@ class BlobTransaction(_TypedTransactionImplementation):
             },
         )
         if not has_blobs:
-            transaction_valid_values["blobVersionedHashes"] = (
-                is_sequence_of_bytes_or_hexstr(item_bytes_size=32, can_be_empty=False)
-            )
+            transaction_valid_values[
+                "blobVersionedHashes"
+            ] = is_sequence_of_bytes_or_hexstr(item_bytes_size=32, can_be_empty=False)
 
         if "v" in dictionary and dictionary["v"] == 0:
             dictionary["v"] = "0x0"
@@ -262,8 +263,10 @@ class BlobTransaction(_TypedTransactionImplementation):
         Builds a BlobTransaction from a signed encoded transaction.
 
         Supports both:
-        - EIP-7594 format: [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
-        - Legacy EIP-4844 format: [tx_payload_body, blobs, commitments, proofs]
+        - EIP-7594 format:
+          [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
+        - Legacy EIP-4844 format:
+          [tx_payload_body, blobs, commitments, proofs]
         """
         if not isinstance(encoded_transaction, HexBytes):
             raise TypeError(f"expected Hexbytes, got type: {type(encoded_transaction)}")

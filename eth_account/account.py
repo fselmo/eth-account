@@ -633,7 +633,9 @@ class Account(AccountLocalActions):
 
     @combomethod
     def unsafe_sign_hash(
-        self, message_hash: Union[HexStr, bytes, int], private_key: PrivateKeyType
+        self,
+        message_hash: Union[HexStr, bytes, int],
+        private_key: PrivateKeyType,
     ) -> SignedMessage:
         """
         Sign the provided hash.
@@ -824,7 +826,7 @@ class Account(AccountLocalActions):
             >>> signed_blob_tx = Account.sign_transaction(blob_transaction, key, blobs=[empty_blob])
             >>> signed_blob_tx
             SignedTransaction(raw_transaction=HexBytes('0x03fa020147f8d98205392284773594008477359400830186a09409616c3d61b3331fc4109a9e41a8bdb7d97766098...00000000'),
-             hash=HexBytes('0xf9dc8867c4324fd7f4506622aa700989562770f01d7d681cef74a1a1deb9fea9'),
+             hash=HexBytes('0x9b997e49d596e6f9ca50a47f35da508f575cd23cb822885872fca9444bc8739c'),
              r=14319949980593194209648175507603206696573324965145502821772573913457715875718,
              s=9129184742597516615341309773045281461399831333162885393648678700392065987233,
              v=1)

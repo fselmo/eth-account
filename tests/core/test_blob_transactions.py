@@ -1,8 +1,8 @@
+import pytest
 import glob
 import json
 import os
 
-import pytest
 from eth_utils import (
     ValidationError,
     to_bytes,
@@ -24,9 +24,7 @@ from eth_account.typed_transactions import (
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "_test_data")
 SIGNED_TX_PATH = os.path.join(TEST_DATA_PATH, "signed_tx.txt")
 BLOB_DATA_1_PATH = os.path.join(TEST_DATA_PATH, "blob_data_1.txt")
-BLOB_DATA_1_SIGNED_PATH = os.path.join(
-    TEST_DATA_PATH, "blob_data_1_signed.txt"
-)
+BLOB_DATA_1_SIGNED_PATH = os.path.join(TEST_DATA_PATH, "blob_data_1_signed.txt")
 ZERO_BLOB_EIP7594_SIGNED_PATH = os.path.join(
     TEST_DATA_PATH, "zero_blob_eip7594_signed.txt"
 )
@@ -37,9 +35,7 @@ CONSENSUS_SPEC_TESTS_PATH = os.path.join(
     "kzg",
     "compute_cells_and_kzg_proofs",
 )
-GO_ETH_KZG_COMPUTED_PATH = os.path.join(
-    TEST_DATA_PATH, "go_eth_kzg_computed.json"
-)
+GO_ETH_KZG_COMPUTED_PATH = os.path.join(TEST_DATA_PATH, "go_eth_kzg_computed.json")
 
 TEST_ACCT = Account.from_key(
     "0x4646464646464646464646464646464646464646464646464646464646464646"
@@ -100,19 +96,12 @@ def test_blobs_commitments_proofs_and_hashes_from_blobs():
         == 1
     )
     # assert calculated versioned hash is the same as the provided versioned hash
-    assert (
-        tx.blob_data.versioned_hashes[0].as_hexstr()
-        == ZERO_BLOB_VERSIONED_HASH
-    )
+    assert tx.blob_data.versioned_hashes[0].as_hexstr() == ZERO_BLOB_VERSIONED_HASH
 
     assert (
-        tx.blob_data.commitments[0].as_hexstr()
-        == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
+        tx.blob_data.commitments[0].as_hexstr() == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
     )
-    assert (
-        tx.blob_data.proofs[0].as_hexstr()
-        == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
-    )
+    assert tx.blob_data.proofs[0].as_hexstr() == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
 
 
 def test_sign_blob_transaction_matches_expected_bytes():
@@ -154,17 +143,11 @@ def test_high_and_low_blob_count_limit_validation():
         BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[])
 
     # make sure up to 6 blobs can be added to a blob transaction
-    BlobTransaction.from_dict(
-        BLOB_TX_DICT, blobs=[to_bytes(hexstr=ZERO_BLOB)] * 6
-    )
+    BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[to_bytes(hexstr=ZERO_BLOB)] * 6)
 
     # assert raises if more than 6 blobs
-    with pytest.raises(
-        ValidationError, match="cannot contain more than 6 blobs"
-    ):
-        BlobTransaction.from_dict(
-            BLOB_TX_DICT, blobs=[to_bytes(hexstr=ZERO_BLOB)] * 7
-        )
+    with pytest.raises(ValidationError, match="cannot contain more than 6 blobs"):
+        BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[to_bytes(hexstr=ZERO_BLOB)] * 7)
 
 
 # --- EIP-7594 PeerDAS Cell Proofs Tests ---
@@ -172,9 +155,7 @@ def test_high_and_low_blob_count_limit_validation():
 
 def test_deserialize_legacy_eip4844_transaction():
     with open(SIGNED_TX_PATH) as signed_tx_file:
-        legacy_tx_bytes = HexBytes(
-            to_bytes(hexstr=signed_tx_file.read().strip("\n"))
-        )
+        legacy_tx_bytes = HexBytes(to_bytes(hexstr=signed_tx_file.read().strip("\n")))
 
     tx = BlobTransaction.from_bytes(legacy_tx_bytes)
 
@@ -184,13 +165,9 @@ def test_deserialize_legacy_eip4844_transaction():
 
     assert len(tx.blob_data.cell_proofs) == 128
 
+    assert tx.blob_data.versioned_hashes[0].as_hexstr() == ZERO_BLOB_VERSIONED_HASH
     assert (
-        tx.blob_data.versioned_hashes[0].as_hexstr()
-        == ZERO_BLOB_VERSIONED_HASH
-    )
-    assert (
-        tx.blob_data.commitments[0].as_hexstr()
-        == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
+        tx.blob_data.commitments[0].as_hexstr() == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
     )
 
 
@@ -199,9 +176,7 @@ def test_deserialize_legacy_eip4844_transaction_with_nonzero_blob():
         expected_blob = to_bytes(hexstr=blob_data_file.read().strip("\n"))
 
     with open(BLOB_DATA_1_SIGNED_PATH) as signed_tx_file:
-        legacy_tx_bytes = HexBytes(
-            to_bytes(hexstr=signed_tx_file.read().strip("\n"))
-        )
+        legacy_tx_bytes = HexBytes(to_bytes(hexstr=signed_tx_file.read().strip("\n")))
 
     tx = BlobTransaction.from_bytes(legacy_tx_bytes)
 
@@ -247,14 +222,14 @@ def test_cell_proofs_match_consensus_spec_vectors(test_name, test_file):
     blob_hex = test_data["input"]["blob"]
     blob_bytes = to_bytes(hexstr=blob_hex)
 
-    expected_cells = test_data["output"][0]
+    test_data["output"][0]
     expected_proofs = test_data["output"][1]
 
     tx = BlobTransaction.from_dict(BLOB_TX_DICT, blobs=[blob_bytes])
 
     assert len(tx.blob_data.cell_proofs) == 128
 
-    for i, (computed_proof, expected_proof) in enumerate(
+    for _i, (computed_proof, expected_proof) in enumerate(
         zip(tx.blob_data.cell_proofs, expected_proofs)
     ):
         assert computed_proof.as_hexstr() == expected_proof.lower()
@@ -296,7 +271,7 @@ def test_blob_transaction_roundtrip_with_cell_proofs():
         == ZERO_BLOB_COMMITMENT_AND_PROOF_HASH
     )
 
-    for i, (original, deserialized) in enumerate(
+    for _i, (original, deserialized) in enumerate(
         zip(tx.blob_data.cell_proofs, tx_from_bytes.blob_data.cell_proofs)
     ):
         assert original.as_hexstr() == deserialized.as_hexstr()
@@ -328,9 +303,7 @@ def _get_go_eth_kzg_test_cases():
     _get_go_eth_kzg_test_cases(),
     ids=lambda x: x if isinstance(x, str) and "valid" in x else "",
 )
-def test_signed_tx_bytes_match_go_eth_kzg(
-    test_name, blob_hex, expected_tx_hex
-):
+def test_signed_tx_bytes_match_go_eth_kzg(test_name, blob_hex, expected_tx_hex):
     blob_bytes = to_bytes(hexstr=blob_hex)
     signed_tx = TEST_ACCT.sign_transaction(BLOB_TX_DICT, blobs=[blob_bytes])
     go_tx_bytes = to_bytes(hexstr=expected_tx_hex)
