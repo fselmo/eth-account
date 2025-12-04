@@ -264,9 +264,9 @@ class BlobTransaction(_TypedTransactionImplementation):
 
         Supports both:
         - EIP-7594 format:
-          [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
+        [tx_payload_body, wrapper_version, blobs, commitments, cell_proofs]
         - Legacy EIP-4844 format:
-          [tx_payload_body, blobs, commitments, proofs]
+        [tx_payload_body, blobs, commitments, proofs]
         """
         if not isinstance(encoded_transaction, HexBytes):
             raise TypeError(f"expected Hexbytes, got type: {type(encoded_transaction)}")
