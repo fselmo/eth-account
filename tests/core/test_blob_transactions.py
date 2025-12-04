@@ -195,7 +195,6 @@ def test_deserialize_legacy_eip4844_transaction_with_nonzero_blob():
 
 
 def _get_consensus_spec_test_cases():
-    """Load valid test cases from consensus-spec-tests."""
     test_cases = []
     pattern = os.path.join(CONSENSUS_SPEC_TESTS_PATH, "*_valid_*", "data.json")
     for test_file in glob.glob(pattern):
@@ -211,10 +210,8 @@ def _get_consensus_spec_test_cases():
 )
 def test_cell_proofs_match_consensus_spec_vectors(test_name, test_file):
     """
-    Test that computed cell proofs match ethereum/consensus-spec-tests vectors.
-
-    Test vectors from: https://github.com/ethereum/consensus-spec-tests
-    Release: v1.6.0-beta.0
+    Test that computed cell proofs match ethereum/consensus-spec-tests vectors
+    release: v1.6.0-beta.0
     """
     with open(test_file) as f:
         test_data = json.load(f)

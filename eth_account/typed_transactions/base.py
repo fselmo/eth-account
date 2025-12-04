@@ -188,8 +188,8 @@ class BlobVersionedHash(_BlobDataElement):
 class BlobPooledTransactionData(BaseModel):
     """
     Represents the blob data for a type 3 `PooledTransaction` as defined by
-    EIP-4844. This class takes blobs as bytes and computes the corresponding
-    commitments, proofs, and versioned hashes.
+    EIP-4844 and EIP-7594. This class takes blobs as bytes and computes the
+    corresponding commitments, proofs, cell_proofs, and versioned hashes.
     """
 
     _versioned_hash_version_kzg: bytes = VERSIONED_HASH_VERSION_KZG

@@ -292,8 +292,6 @@ class BlobTransaction(_TypedTransactionImplementation):
                 dictionary = cls._legacy_signed_pooled_transaction_serializer.from_bytes(  # type: ignore  # noqa: E501
                     transaction_payload
                 ).as_dict()
-                # Legacy format has 'proofs' instead of 'cell_proofs', but we don't
-                # need to convert since cell_proofs will be recomputed from blobs
             except rlp.exceptions.ObjectDeserializationError:
                 # Fall back to transaction without blob data
                 dictionary = cls._signed_transaction_serializer.from_bytes(  # type: ignore  # noqa: E501
@@ -388,8 +386,8 @@ class BlobTransaction(_TypedTransactionImplementation):
             rlp_serializer = self.__class__._signed_transaction_serializer
             payload = rlp.encode(rlp_serializer.from_dict(rlp_structured_dict))  # type: ignore # noqa: E501
         else:
-            # `PooledTransaction` as defined in EIP-7994
-            # rlp([tx_payload_body, blobs, commitments, cell_proofs])
+            # `PooledTransaction` as defined in EIP-7594
+            # rlp([tx_payload_body, wrapper_version, blobs, commitments, cell_proofs])
             rlp_serializer = self.__class__._signed_pooled_transaction_serializer
             pooled_txn_as_dict = {
                 "tx_payload_body": tuple(
