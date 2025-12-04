@@ -825,7 +825,7 @@ class Account(AccountLocalActions):
             >>> # The `blobVersionedHashes` transaction field is calculated from the `blobs` kwarg
             >>> signed_blob_tx = Account.sign_transaction(blob_transaction, key, blobs=[empty_blob])
             >>> signed_blob_tx
-            SignedTransaction(raw_transaction=HexBytes('0x03fa020147f8d98205392284773594008477359400830186a09409616c3d61b3331fc4109a9e41a8bdb7d97766098...00000000'),
+            SignedTransaction(raw_transaction=HexBytes('0x03fa021999f8d98205392284773594008477359400830186a09409616c3d61b3331fc4109a9e41a8bdb7d97766098...00000000'),
              hash=HexBytes('0x9b997e49d596e6f9ca50a47f35da508f575cd23cb822885872fca9444bc8739c'),
              r=14319949980593194209648175507603206696573324965145502821772573913457715875718,
              s=9129184742597516615341309773045281461399831333162885393648678700392065987233,
